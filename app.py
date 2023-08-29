@@ -26,19 +26,13 @@ anime = [
     {"ID": 10, "nombre": "Anime F", "categoria": "Drama", "rating": 4.0, "reviews": 150, "season": "Invierno",
      "tipo": "Película", "poster": "img1.png"}
 ]
+@app.route('/')
+def inicio():
+    return "hola anime"
 
 @app.route('/anime', methods=['GET'])
 def mostrar_anime():
     return jsonify(anime)
-
-@app.route('/anime/<int:anime_id>', methods=['GET'])
-def obtener_anime(anime_id):
-    for anime_item in anime:
-        if anime_item["ID"] == anime_id:
-            return jsonify(anime_item)
-
-    return jsonify({"mensaje": "Anime no encontrado"}), 404
-
 @app.route('/anime', methods=['POST'])
 def agregar_anime():
     nuevo_anime = request.get_json()
@@ -50,7 +44,13 @@ def agregar_anime():
     anime.append(nuevo_anime)
     return jsonify({"mensaje": "Nuevo anime agregado exitosamente"})
 
+@app.route('/anime/<int:anime_id>', methods=['GET'])
+def obtener_anime(anime_id):
+    for anime_item in anime:
+        if anime_item["ID"] == anime_id:
+            return jsonify(anime_item)
 
+    return jsonify({"mensaje": "Anime no encontrado"}), 404
 
 @app.route('/anime/<int:anime_id>', methods=['DELETE'])
 def eliminar_anime(anime_id):
@@ -73,7 +73,9 @@ def modificar_anime(anime_id):
 
     for anime_item in anime:
         if anime_item["ID"] == anime_id:
+            anime_item.clear()
             anime_item.update(anime_data)
+            anime_item["ID"] = anime_id # ID NO PUEDE CAMBIARSE
             return jsonify({"mensaje": f"Anime con ID {anime_id} modificado correctamente"})
 
     return jsonify({"mensaje": "Anime no encontrado"}), 404
@@ -87,6 +89,13 @@ def modificar_parcial_anime(anime_id):
     for anime_item in anime:
         if anime_item["ID"] == anime_id:
             anime_item.update(anime_data)
+            keys_to_remove = []     #lista de key a remover
+            for key, value in anime_data.items():
+                if value == "":
+                    keys_to_remove.append(key)
+            for key in keys_to_remove:
+                anime_item.pop(key)
+            anime_item["ID"] = anime_id # ID NO PUEDE CAMBIARSE
             return jsonify({"mensaje": f"Anime con ID {anime_id} modificado parcialmente correctamente"})
 
     return jsonify({"mensaje": "Anime no encontrado"}), 404
